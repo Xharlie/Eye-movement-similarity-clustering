@@ -7,6 +7,13 @@ import scipy.io
 
 # def draw_line()
 
+def check_create_dir(dir):
+    try:
+        os.stat(dir)
+    except:
+        os.mkdir(dir)
+    return dir
+
 def calculate_answer_matrix(info):
     dimension = len(info)
     answer_dis=np.zeros((dimension,dimension),dtype=np.float)

@@ -1,13 +1,15 @@
 from matplotlib import pyplot as plt
 from matplotlib import cm as cm
+import matplotlib.colors
 from matplotlib.colors import LinearSegmentedColormap
+from mpl_toolkits.mplot3d import Axes3D
 import parula
 import numpy as np
 import series_matching
 import matplotlib.patches as patches
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib.collections import LineCollection
-import matplotlib.path as mpath
+import os.path
+import scipy.io
+import preprocessing
 
 def highResPoints(x,y,factor=10, RESFACT= 10):
     '''
@@ -104,7 +106,9 @@ def correlation_matrix(df, x, y, stride,window_length, o1=0, o2=1, threeD=False,
     # viscm(parula_map)
 
     # cmap = cm.get_cmap('jet', 30)
-    cax = ax1.imshow(df, interpolation="nearest", cmap=parula_map)
+    norm = matplotlib.colors.Normalize(vmin=0.3, vmax=1)
+
+    cax = ax1.imshow(df, interpolation="nearest", cmap=parula_map, norm=norm)
     ax1.grid(True)
     plt.title('TWED normalized')
     labels=range(df.shape[0])
@@ -113,7 +117,8 @@ def correlation_matrix(df, x, y, stride,window_length, o1=0, o2=1, threeD=False,
     ax1.set_xticklabels(labels,fontsize=6)
     ax1.set_yticklabels(labels,fontsize=6)
     # Add colorbar, make sure to specify tick locations to match desired ticklabels
-    fig.colorbar(cax, ticks=[.75,.8,.85,.90,.95,1])
+
+    fig.colorbar(cax, ticks=[.25, .45, .65, .85, .95, 1], spacing='proportional')
     ax1.add_patch(
         patches.Circle(
             (o1 * 1.0 , o2*1.0),
@@ -134,22 +139,34 @@ def correlation_matrix(df, x, y, stride,window_length, o1=0, o2=1, threeD=False,
 
 if __name__ == "__main__":
     lam = 5000
-    nu = 5000
-    stride = 32
+    nu = 100000
+    stride = 32 * 5
     window_length = 32 * 5
     frame_per_second = 32
     time_length = 30
-    segment=1
+    segment=2
     t = 3
-    o1 = 0
-    o2 = 1
+    o1 = 1
+    o2 = 8
+    threeD=True
 
     x_file = 'data/c_location/xo{}.txt'.format(segment)
     y_file = 'data/c_location/yo{}.txt'.format(segment)
     # the x,y value is 489871.7
-
-    series_similarity,x,y = series_matching.sliding_window(x_file=x_file, y_file=y_file, lam=lam, nu=nu,
-        stride=stride, window_length=window_length, frame_per_second=frame_per_second, time_length=time_length)
-    time_range= [time_length * (segment-1) + (t - 1) * window_length / frame_per_second,
+    dest = 'result/5s/c_location/lam{}_nu{}/dis_{}.mat'.format(lam,nu,segment)
+    if os.path.exists(dest):
+        series_similarity = scipy.io.loadmat(dest)['matrix']
+        # print series_similarity
+        x = preprocessing.load(x_file)
+        y = preprocessing.load(y_file)
+        sample_rate = x.shape[0] / (frame_per_second * time_length)
+        if (x.shape[0] != y.shape[0] or x.shape[1] != y.shape[1]):
+            print("shape mismatch", x.shape, y.shape)
+        x = preprocessing.down_sample(x, sample_rate)
+        y = preprocessing.down_sample(y, sample_rate)
+    else:
+        series_similarity,x,y = series_matching.sliding_window(x_file=x_file, y_file=y_file, lam=lam, nu=nu,
+            stride=stride, window_length=window_length, frame_per_second=frame_per_second, time_length=time_length)
+    time_range = [time_length * (segment-1) + (t - 1) * window_length / frame_per_second,
                  time_length * (segment - 1) + t * window_length / frame_per_second]
-    correlation_matrix(series_similarity,x,y,stride,window_length,o1=o1, o2=o2, threeD=False, t = t,time_range=time_range)
+    correlation_matrix(series_similarity,x,y,stride,window_length,o1=o1, o2=o2, threeD=threeD, t = t,time_range=time_range)

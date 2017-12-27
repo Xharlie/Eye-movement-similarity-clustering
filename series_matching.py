@@ -14,6 +14,8 @@ def sliding_window(x_file=None,y_file=None,lam=None,nu=None,
         print("shape mismatch",x.shape,y.shape)
     x = preprocessing.down_sample(x, sample_rate)
     y = preprocessing.down_sample(y, sample_rate)
+    # x = np.delete(x,(6), axis=1)
+    # y = np.delete(y,(6), axis=1)
     periods = int(math.floor((x.shape[0] - window_length) / stride) + 1)
 
     series_distance = np.zeros((periods,x.shape[1],x.shape[1]))
@@ -23,14 +25,14 @@ def sliding_window(x_file=None,y_file=None,lam=None,nu=None,
         y_window = y[t * stride:t * stride + window_length,:]
         for i in range(x.shape[1]):
             for j in range(x.shape[1]):
-                p1_data = np.stack((x_window[:,i], y_window[:,i]))
-                p2_data = np.stack((x_window[:,j], y_window[:,j]))
+                p1_data = np.column_stack((x_window[:,i], y_window[:,i]))
+                p2_data = np.column_stack((x_window[:,j], y_window[:,j]))
                 series_distance[t,i,j] = TWED.TWED(p1_data,p2_data,lam,nu)
 
     series_similarity = 1 - series_distance / np.max(series_distance)
 
-    # print series_distance[0,:,:]
-    # correlation_matrix(series_similarity[10,:,:])
+    print series_distance,np.max(series_distance)
+
     return series_similarity, x, y
 
 if __name__ == "__main__":

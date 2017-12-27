@@ -26,18 +26,19 @@ def TWED(t1_data, t2_data, lam, nu):
     """"Requires: t1: multivariate time series in numpy matrix format.
     t2: multivariate time series in numpy matrix format. lam: penalty lambda parameter, nu: stiffness coefficient"""
     # """Returns the TWED distance between the two time series. """
-    result = [[0] * len(t2_data) for row in xrange(len(t1_data))]
+    n = t1_data.shape[0]
+    m = t2_data.shape[0]
+    result = [[0] * m for row in xrange(n)]
     result = init_matrix(result)
-    n = len(t1_data)
-    m = len(t2_data)
     for i in xrange(1, n):
         for j in xrange(1, m):
             insertion = result[i - 1][j] + LpDist(t1_data[i - 1], t1_data[i]) + \
                          nu  + lam
-            deletion = result[i][j- 1] + LpDist(t2_data[j - 1], t2_data[j]) + \
+            deletion = result[i][j - 1] + LpDist(t2_data[j - 1], t2_data[j]) + \
                         nu + lam
             # print i, j, n , m, t1_time[i], t2_time[j]
             match = result[i - 1][j - 1] + LpDist(t1_data[i], t2_data[j]) + \
                      2 * nu * (abs(i - j)) + LpDist(t1_data[i - 1], t2_data[j - 1])
+            # print nu, lam, insertion, deletion, match
             result[i][j] = min(insertion, deletion, match)
     return result[n - 1][m - 1]

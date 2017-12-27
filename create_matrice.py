@@ -12,15 +12,15 @@ def check_create_dir(dir):
 
 
 if __name__ == "__main__":
-    stride = 300
-    window_duraing= 30
+    stride = 32 * 5
+    window_duraing= 5
     frame_per_second = 32
     window_length = frame_per_second * window_duraing
     time_length = 30
 
     for data_source in ['c_location','s_location']:
-        for lam in [0, 1000, 10000, 20000, 50000, 100000]:
-            for nu in [0, 1000, 10000, 20000, 50000,100000]:
+        for lam in [0, 5000, 10000, 20000, 50000, 100000]:
+            for nu in [0, 5000, 10000, 20000, 50000, 100000]:
                 result_dir="result/{}s/{}/lam{}_nu{}/".format(window_duraing,data_source,lam,nu)
                 check_create_dir(result_dir)
                 for file_num in range(1,21):
